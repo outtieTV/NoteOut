@@ -280,7 +280,15 @@ if ($action === 'delete_note' && $_SERVER['REQUEST_METHOD'] === 'POST') {
 [data-theme="dark"]{ --bg:#0f1113; --card:#111418; --muted:#9aa0a6; --accent:#2a9df4; color: #e6eef8; }
 body{ font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; background:var(--bg); margin:0; padding:1rem; }
 .app { max-width:1200px; margin:0 auto; display:grid; grid-template-columns:260px 1fr; gap:1rem; }
-.sidebar { background:var(--card); padding:1rem; border-radius:8px; box-shadow:0 6px 18px rgba(0,0,0,0.06); height:calc(100vh - 2rem); overflow:auto; position:sticky; top:1rem; }
+.sidebar { 
+    background:var(--card); 
+    padding:1rem; 
+    border-radius:8px; 
+    box-shadow:0 6px 18px rgba(0,0,0,0.06); 
+    height:calc(100vh - 2rem); 
+    overflow:auto; 
+    top:1rem; /* Keep top:1rem for sticky on large screens */
+}
 .main { background:var(--card); padding:1rem; border-radius:8px; box-shadow:0 6px 18px rgba(0,0,0,0.06); min-height: calc(100vh - 2rem); overflow:auto; }
 .h1 { display:flex; align-items:center; justify-content:space-between; gap:1rem; }
 .btn { border: none; background:var(--accent); color:white; padding:0.45rem 0.7rem; border-radius:6px; cursor:pointer; font-weight:600; }
@@ -329,8 +337,73 @@ textarea { min-height:140px; resize:vertical; }
 .small-btn { padding:0.3rem 0.45rem; font-size:0.9rem; border-radius:6px; border:1px solid rgba(0,0,0,0.06); background:transparent; cursor:pointer; }
 footer.small { margin-top:1rem; font-size:0.85rem; color:var(--muted); text-align:center; }
 @media (max-width:900px) {
-  .app { grid-template-columns: 1fr; }
-  .sidebar { position:relative; height:auto; }
+  /* 1. On small screens, switch to a single-column layout */
+  .app { grid-template-columns: 1fr; } 
+  
+  /* 2. Sidebar should be relative and full width on small screens */
+  .sidebar { 
+    position:relative; 
+    height:auto; 
+    width: 100%; /* Ensure it fills the grid column */
+  }
+  
+  /* 3. By default, hide the sidebar on mobile */
+  .sidebar-hidden #sidebar {
+      display: none;
+  }
+}
+/* Ensure the sidebar's default state is sticky on large screens (901px and up) */
+@media (min-width:901px) {
+  /* Default Desktop Layout: 260px (Sidebar) and 1fr (Notes/Main) */
+  .app {
+    grid-template-columns: 260px 1fr;
+  }
+  
+  /* Enforce sticky positioning here */
+  .sidebar { 
+    position:sticky; 
+    /* Ensure height calculation is correct for sticky */
+    height:calc(100vh - 2rem); 
+  }
+  
+  /* Hiding behavior on Desktop (Fixes the "shrinking" notes column) */
+  .sidebar-hidden #sidebar {
+      display: none;
+  }
+  /* When sidebar is hidden on desktop, main content takes the full width (1fr) */
+  .sidebar-hidden .app {
+      grid-template-columns: 1fr; /* Main content now occupies the full grid */
+  }
+  .desktop-only { display: none !important; }
+
+  .sidebar-hidden .desktop-only { 
+      /* When sidebar is hidden, show the toggle button */
+      display: inline-block !important; 
+  }
+  
+  .sidebar-hidden #sidebar {
+      /* Ensure sidebar is hidden by default on mobile */
+      display: none;
+  }
+  .desktop-only { display: inline-block !important; }
+}
+
+/* Mobile Layout (Max 900px) */
+@media (max-width:900px) {
+  /* 1. On small screens, switch to a single-column layout by default */
+  .app { grid-template-columns: 1fr; } 
+  
+  /* 2. Sidebar should be relative and full width on small screens */
+  .sidebar { 
+    position:relative; 
+    height:auto; 
+    width: 100%; 
+  }
+  
+  /* 3. By default, hide the sidebar on mobile */
+  .sidebar-hidden #sidebar {
+      display: none;
+  }
 }
 </style>
 </head>
@@ -345,6 +418,7 @@ footer.small { margin-top:1rem; font-size:0.85rem; color:var(--muted); text-alig
       <button id="settingsBtn" class="btn ghost">⚙ Settings</button>
       <button id="addFolderBtn" class="btn">+ Folder</button>
       <button id="addNoteBtn" class="btn">+ Note</button>
+	  <button id="collapseFolders" class="small-btn">☰ Menu</button>
     </div>
   </div>
 
@@ -352,7 +426,6 @@ footer.small { margin-top:1rem; font-size:0.85rem; color:var(--muted); text-alig
     <aside class="sidebar" id="sidebar">
       <div style="display:flex; align-items:center; justify-content:space-between;">
         <strong>Folders</strong>
-        <button id="collapseFolders" class="small-btn">Collapse</button>
       </div>
       <div id="foldersList" style="margin-top:0.6rem;"></div>
 
@@ -1010,10 +1083,39 @@ byId('filterFolder').onchange = () => {
 // search input enter
 byId('searchInput').addEventListener('keydown', (e)=>{ if (e.key === 'Enter') refreshNotes(); });
 
-// collapse sidebar
+// Also, initialize the state on page load
+(function initSidebarState() {
+    const mainWrapper = document.querySelector('.app').closest('div');
+    const button = byId('collapseFolders');
+    
+    if (window.innerWidth <= 900) {
+        // Mobile State: Sidebar is hidden by default
+        mainWrapper.classList.add('sidebar-hidden');
+        button.innerHTML = '☰ Menu';
+        // The mobile-only CSS will make the button visible now
+    } else {
+        // Desktop State: Sidebar is visible by default
+        mainWrapper.classList.remove('sidebar-hidden');
+        button.innerHTML = '✕ Collapse';
+        // The desktop-only CSS will make the button visible now
+    }
+})();
+
+// Re-add the click handler, ensuring it correctly updates the icon
 byId('collapseFolders').onclick = () => {
-  const s = byId('sidebar');
-  s.style.display = s.style.display === 'none' ? '' : 'none';
+    const mainWrapper = document.querySelector('.app').closest('div');
+    const button = byId('collapseFolders');
+    
+    // Toggle the class on the main wrapper
+    mainWrapper.classList.toggle('sidebar-hidden');
+
+    if (mainWrapper.classList.contains('sidebar-hidden')) {
+        // Sidebar is hidden -> Show Hamburger icon (☰)
+        button.innerHTML = '☰ Menu';
+    } else {
+        // Sidebar is visible -> Show Close icon (✕)
+        button.innerHTML = '✕ Collapse';
+    }
 };
 
 // helper: open edit route when modal closed - ensure default submit restored
