@@ -1,4 +1,4 @@
-#OuttieTV's NoteOut
+# OuttieTV's NoteOut
 
 Self-hosted notes web app using php and sqlite3.<br />
 
@@ -21,3 +21,4 @@ To install:<br />
 8. for https, I suggest using nginx reverse proxy or similar
 
 <img width="1924" height="957" alt="image" src="https://github.com/user-attachments/assets/d5024d5e-b542-42f2-bb1c-9417e80f5a6f" />
+
