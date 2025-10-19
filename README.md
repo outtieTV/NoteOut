@@ -19,3 +19,5 @@ To install:<br />
 6. visit http://localhost/db_init.php
 7. visit http://localhost and add notes
 8. for https, I suggest using nginx reverse proxy or similar
+
+<img width="1924" height="957" alt="image" src="https://github.com/user-attachments/assets/d5024d5e-b542-42f2-bb1c-9417e80f5a6f" />
