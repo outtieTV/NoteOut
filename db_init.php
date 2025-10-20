@@ -25,15 +25,16 @@ try {
     ");
 
     $db->exec("
-        CREATE TABLE IF NOT EXISTS notes (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            folder_id INTEGER,
-            title TEXT NOT NULL,
-            content TEXT,
-            media TEXT,
-            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (folder_id) REFERENCES folders(id) ON DELETE SET NULL
-        );
+		CREATE TABLE IF NOT EXISTS notes (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			folder_id INTEGER,
+			title TEXT NOT NULL,
+			content TEXT,
+			media TEXT,
+			created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+			updated_at TEXT DEFAULT CURRENT_TIMESTAMP, -- ADDED THIS LINE
+			FOREIGN KEY (folder_id) REFERENCES folders(id) ON DELETE SET NULL
+		);
     ");
 
     echo "✅ Database initialized successfully: {$db_file}\n";
